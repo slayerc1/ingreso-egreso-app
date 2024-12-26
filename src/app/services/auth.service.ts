@@ -11,6 +11,7 @@ import {
 } from '@angular/fire/auth';
 import {
   doc,
+  docSnapshots,
   DocumentData,
   DocumentReference,
   Firestore,
@@ -36,7 +37,7 @@ export class AuthService {
 
   private authState$ = authState(this.auth);
   private authStateSubscription: Subscription;
-  private userSubs?: Unsubscribe;
+  private userSubs?: Subscription;
   private _user?: Usuario;
 
   get user() {
@@ -47,18 +48,19 @@ export class AuthService {
     this.authStateSubscription = this.authState$.subscribe(
       async (fbUser: User | null) => {
         if (fbUser) {
-          this.userSubs = onSnapshot(
-            doc(this.firestore, fbUser.uid, 'usuario'),
-            (docSanp) => {
-              this._user = docSanp.data() as Usuario;
-              this.store.dispatch(
-                authActions.setUser({
-                  user: Usuario.fromFirebase(this._user),
-                })
-              );
-            }
-          );
+          this.userSubs = docSnapshots(
+            doc(this.firestore, fbUser.uid, 'usuario')
+          ).subscribe((docSanp) => {
+            this._user = docSanp.data() as Usuario;
+            this.store.dispatch(
+              authActions.setUser({
+                user: Usuario.fromFirebase(this._user),
+              })
+            );
+          });
         } else {
+          this._user = undefined;
+          this.userSubs?.unsubscribe();
           this.store.dispatch(authActions.unSetUser());
           this.store.dispatch(ingresoEgresoActions.unSetItems());
         }
@@ -68,7 +70,6 @@ export class AuthService {
 
   ngOnDestroy() {
     this.authStateSubscription.unsubscribe();
-    this.userSubs!();
   }
 
   async crearUsuario(

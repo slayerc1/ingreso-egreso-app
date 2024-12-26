@@ -1,6 +1,6 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { AppState } from '../../app.reducer';
+import { AppStateWithIngreso } from '../ingreso-egreso.reducer';
 import { IngresoEgreso } from '../../models/ingreso-egreso.model';
 import { Subscription } from 'rxjs';
 import { IngresoEgresoService } from '../../services/ingreso-egreso.service';
@@ -12,7 +12,7 @@ import Swal from 'sweetalert2';
   styles: ``,
 })
 export class DetalleComponent implements OnInit, OnDestroy {
-  private store = inject(Store<AppState>);
+  private store = inject(Store<AppStateWithIngreso>);
   private ingresoEgresoService = inject(IngresoEgresoService);
 
   ingresosEgresos: IngresoEgreso[] = [];

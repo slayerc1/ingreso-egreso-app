@@ -1,9 +1,9 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { AppState } from '../../app.reducer';
 import { IngresoEgreso } from '../../models/ingreso-egreso.model';
 import { ChartData } from 'chart.js';
 import { Subscription } from 'rxjs';
+import { AppStateWithIngreso } from '../ingreso-egreso.reducer';
 
 @Component({
   selector: 'app-estadistica',
@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
   styles: ``,
 })
 export class EstadisticaComponent implements OnInit, OnDestroy {
-  private store = inject(Store<AppState>);
+  private store = inject(Store<AppStateWithIngreso>);
 
   ingresos: number = 0;
   egresos: number = 0;
@@ -39,7 +39,7 @@ export class EstadisticaComponent implements OnInit, OnDestroy {
 
   generarEstadistica(items: IngresoEgreso[]) {
     this.totalIngresos = 0;
-    this.totalIngresos = 0;
+    this.totalEgresos = 0;
     this.ingresos = 0;
     this.egresos = 0;
 

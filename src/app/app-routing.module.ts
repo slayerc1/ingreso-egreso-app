@@ -17,8 +17,10 @@ const routes: Routes = [
   },
   {
     path: '',
-    component: DashboardComponent,
-    children: dashboardRoutes,
+    loadChildren: () =>
+      import('./ingreso-egreso/ingreso-egreso.module').then(
+        (m) => m.IngresoEgresoModule
+      ),
     canActivate: [authGuard],
   },
   {
