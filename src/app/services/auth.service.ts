@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   getAuth,
   signInWithEmailAndPassword,
+  Unsubscribe,
   User,
   UserCredential,
 } from '@angular/fire/auth';
@@ -14,6 +15,7 @@ import {
   DocumentReference,
   Firestore,
   getDoc,
+  onSnapshot,
   setDoc,
 } from '@angular/fire/firestore';
 import { Store } from '@ngrx/store';
@@ -22,6 +24,7 @@ import { map, Observable, Subscription } from 'rxjs';
 import { Usuario } from '../models/usuario.model';
 import { AppState } from '../app.reducer';
 import * as authActions from '../auth/auth.actions';
+import * as ingresoEgresoActions from '../ingreso-egreso/ingreso-egreso.actions';
 
 @Injectable({
   providedIn: 'root',
@@ -33,19 +36,31 @@ export class AuthService {
 
   private authState$ = authState(this.auth);
   private authStateSubscription: Subscription;
+  private userSubs?: Unsubscribe;
+  private _user?: Usuario;
+
+  get user() {
+    return this._user;
+  }
 
   constructor() {
     this.authStateSubscription = this.authState$.subscribe(
       async (fbUser: User | null) => {
         if (fbUser) {
-          const user = await getDoc(doc(this.firestore, fbUser.uid, 'usuario'));
-          this.store.dispatch(
-            authActions.setUser({
-              user: Usuario.fromFirebase(user.data() as Usuario),
-            })
+          this.userSubs = onSnapshot(
+            doc(this.firestore, fbUser.uid, 'usuario'),
+            (docSanp) => {
+              this._user = docSanp.data() as Usuario;
+              this.store.dispatch(
+                authActions.setUser({
+                  user: Usuario.fromFirebase(this._user),
+                })
+              );
+            }
           );
         } else {
           this.store.dispatch(authActions.unSetUser());
+          this.store.dispatch(ingresoEgresoActions.unSetItems());
         }
       }
     );
@@ -53,6 +68,7 @@ export class AuthService {
 
   ngOnDestroy() {
     this.authStateSubscription.unsubscribe();
+    this.userSubs!();
   }
 
   async crearUsuario(
